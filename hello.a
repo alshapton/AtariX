@@ -24,7 +24,7 @@ Start   sei		; disable interrupts
 	txs		; ... transfer X register to S register (stack pointer)
 
 ; Set background color
-	lda #$80	;load value into A ($30 is deep red on NTSC)
+	lda #$45	;load value into A ($30 is deep red on NTSC)
 	sta COLUBK	;put the value of A into the background color register
 
 ; Nothing else to do, so let's start over.
