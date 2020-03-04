@@ -1,0 +1,74 @@
+
+            processor 6502
+
+            include "vcs.h"
+
+            include "macro.h"
+
+            SEG
+            ORG $F000
+
+Reset
+
+StartOfFrame
+
+   ; Start of vertical blank processing
+
+            lda #0
+            sta VBLANK
+
+            lda #2
+            sta VSYNC
+
+               ; 3 scanlines of VSYNCH signal... - these are at the top of the screen
+
+                sta WSYNC
+                sta WSYNC
+                sta WSYNC
+
+            lda #0
+            sta VSYNC           
+           
+;==========================================           
+; Start of 37 scan lines 
+
+	    ldx #37
+vblankscan  sta WSYNC
+	    dex
+            bne vblankscan
+            
+;==========================================
+; 192 scanlines of picture..
+
+	    ldx #192
+screenLoop  
+            dex
+            stx COLUBK
+            sta WSYNC
+	    bne screenLoop
+            
+;==========================================
+
+            lda #%0100001
+            sta VBLANK                     ; end of screen 
+            
+;==========================================
+
+; 30 scanlines of overscan... - the bottom overscan (macro to loop 30 times)
+
+	    ldx #30
+voverscan   sta WSYNC
+	    dex
+            bne voverscan
+            
+;==========================================
+            jmp StartOfFrame
+
+
+            ORG $FFFA
+            
+            .word Reset          ; NMI
+            .word Reset          ; RESET
+            .word Reset          ; IRQ
+            
+    	END
