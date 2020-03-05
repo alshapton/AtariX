@@ -5,10 +5,37 @@
 
             include "macro.h"
 
+PATTERN         = $80                  ; storage location (1st byte in RAM)
+
+TIMETOCHANGE    = 20
+
             SEG
             ORG $F000
 
 Reset
+
+;====================   
+; Initialising Memory
+;====================
+
+   ; * Clears all variables and stack
+   ; * Initialises the stack pointer
+   ; * Also clears the stack registers by "wrapping" the stack (unusual technique)
+   
+	    ldx #0
+            txs
+            pha   ; Best way to get SP=$FF, X=0
+            txa
+
+CLEAR       pha
+            dex
+
+            bne CLEAR
+;=========================== 
+; End of Initialising Memory
+;===========================
+
+
 
 StartOfFrame
 
@@ -18,17 +45,18 @@ StartOfFrame
             sta VBLANK
 
             lda #2
-            sta VSYNC
+            sta VSYNC      ; Vertical SYNC - indicates start of a new frame
+                           ; byte 2 being set indicates start of vertical sync
 
                ; 3 scanlines of VSYNCH signal... - these are at the top of the screen
 
-                sta WSYNC
-                sta WSYNC
-                sta WSYNC
+                sta WSYNC ; halt the 6502 till the TIA finishes the scan line then
+                sta WSYNC ; reactivates the 6502 only to be told to shut off again
+                sta WSYNC ; for the 3rd blank scan line. After which, a 
 
             lda #0
-            sta VSYNC           
-           
+            sta VSYNC      ; Vertical SYNC 
+                           ; All bytes being 0 indicates end of vertical sync           
 ;==========================================           
 ; Start of 37 scan lines 
 
@@ -36,25 +64,32 @@ StartOfFrame
 vblankscan  sta WSYNC
 	    dex
             bne vblankscan
-            
-;==========================================
+
+; +========================================+
+; |               BEGIN KERNEL             |
+; +========================================+
+
 ; 192 scanlines of picture..
 
 	    ldx #192
+            ldy #0
 screenLoop  
             dex
-            stx COLUBK
+            ;iny
+            sty COLUBK                     ; TIA Register for background colour
             sta WSYNC
 	    bne screenLoop
             
-;==========================================
+; +========================================+
+; |               END KERNEL               |
+; +========================================+
 
             lda #%0100001
             sta VBLANK                     ; end of screen 
             
 ;==========================================
 
-; 30 scanlines of overscan... - the bottom overscan (macro to loop 30 times)
+; 30 scanlines of overscan... - the bottom overscan (loop 30 times)
 
 	    ldx #30
 voverscan   sta WSYNC
