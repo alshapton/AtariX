@@ -16,17 +16,24 @@ PLAYFIELD_B  EQU $FF                  ; Bottom of playfield
 PLAYFIELD_L  EQU 16		      ; Left/Right side of playfield
 
 
-ROCKET_TOP EQU 80
+ROCKET_TOP   EQU 80
 
 ; Scan Symbols
 
 SCAN_LINES   EQU 192                  ; Number of scan Lines
-BOTTOM_WIDTH EQU  		      ; Number of scan lines of the bottom of the playfield
+BOTTOM_WIDTH EQU 30 		      ; Number of scan lines of the bottom of the playfield
 OVERSCAN     EQU 30                   ; Value of overscan (bottom of screen)
              
-             
+; Shadow Registers as required:
+
+
+CTRLPF_shadow = $82  ; a RAM location for CTRLPF shadow register
+
+
+
+
              SEG
-             ORG $F000                    ; memory address of start of code
+             ORG $F000                ; memory address of start of code
 
 
 Reset
@@ -35,9 +42,9 @@ Reset
 ; Initialising Memory ON STARTUP
 ;===============================
 
-   ; * Clears all variables and stack
-   ; * Initialises the stack pointer
-   ; * Also clears the stack registers by "wrapping" the stack (unusual technique)
+; * Clears all variables and stack
+; * Initialises the stack pointer
+; * Also clears the stack registers by "wrapping" the stack (unusual technique)
    
              ldx #0
              txa
@@ -50,7 +57,7 @@ Clear        dex
 ; End of Initialising Memory ON STARTUP
 ;======================================
 
-;-------------------------------------
+
 
 StartOfFrame ; where frame drawing starts
 
@@ -81,7 +88,7 @@ vblankscan   sta WSYNC      ; Wait for the TIA to tell the 6502 that the scanlin
              sta COLUPF       ; store in playfield colour register
              lda #1           ; Reflect payfield
              sta CTRLPF
-
+    	     sta CTRLPF_shadow          ; init CTRLPF shadow register as required
 
 	        
 	     ldx #203        ; X-register - number of scan lines
@@ -92,7 +99,7 @@ screenLoop
              sta PF0
 
              dex
-             ;sty COLUBK                     ; TIA Register for background colour
+             ;sty COLUBK                    ; TIA Register for background colour
              sta WSYNC                      ; Scanline Sync (6502 - TIA - 6502 Off)
 	     
              
